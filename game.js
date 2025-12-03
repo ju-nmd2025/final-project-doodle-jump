@@ -257,7 +257,7 @@ function drawObstacle(o) {
 
   if (o.type === "balloon") {
     // Balloon body
-    fill("#ffd1dc");
+    fill("#d1edffff");
     ellipse(0, 0, o.size + 10, o.size + 14);
     // Tie
     fill("#ff69b4");

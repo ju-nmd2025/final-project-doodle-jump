@@ -112,7 +112,7 @@ function draw() {
     if (o.y > height + 40) {
       o.x = random(40, width - 40);
       o.y = random(-200, 0);
-      o.dx = random([-1, 1]) * 0.9;
+      o.dx = random([-1, 1]) * 0.8;
       o.moving = random(["balloon", "star"]);
     }
   }

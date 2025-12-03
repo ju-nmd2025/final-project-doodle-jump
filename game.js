@@ -106,6 +106,16 @@ function draw() {
       p.moving = random() < 0.4;
     }
   }
+  
+  //Recycle obstacles
+  for (let o of obstacles) {
+    if (o.y > height + 40) {
+      o.x = random(40, width - 40);
+      o.y = random(-200, 0);
+      o.dx = random([-1, 1]) * 0.9;
+      o.moving = random(["balloon", "star"]);
+    }
+  }
 
   // Obstacles movement + collision
   for (let o of obstacles) {
@@ -167,7 +177,7 @@ function drawGameOver() {
   textSize(20);
   text("Score: " + score, width / 2, height / 2 - 20);
   text("High Score: " + highScore, width / 2, height / 2 + 8);
-  text("Press R to restart", width / 2, height / 2 + 40);
+  text("Press SPACE to restart", width / 2, height / 2 + 40);
 }
 
 function handleKeyboard() {
@@ -198,10 +208,10 @@ function mouseClicked() {
 }
 
 function keyPressed() {
-  if (gameOver && (key === "r" || key === "R")) {
+  if (gameOver && (key === " ")) {
     resetGame();
     gameStarted = true;
-  }
+  } 
 }
 
 // Purple cat
@@ -257,7 +267,7 @@ function drawObstacle(o) {
 
   if (o.type === "balloon") {
     // Balloon body
-    fill("#ffd1dc");
+    fill("#d1edffff");
     ellipse(0, 0, o.size + 10, o.size + 14);
     // Tie
     fill("#ff69b4");

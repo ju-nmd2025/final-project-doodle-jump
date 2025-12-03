@@ -177,7 +177,7 @@ function drawGameOver() {
   textSize(20);
   text("Score: " + score, width / 2, height / 2 - 20);
   text("High Score: " + highScore, width / 2, height / 2 + 8);
-  text("Press R to restart", width / 2, height / 2 + 40);
+  text("Press SPACE to restart", width / 2, height / 2 + 40);
 }
 
 function handleKeyboard() {
@@ -208,7 +208,7 @@ function mouseClicked() {
 }
 
 function keyPressed() {
-  if (gameOver && (key === "r" || key === "R")) {
+  if (gameOver && (key === " ")) {
     resetGame();
     gameStarted = true;
   } 

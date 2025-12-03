@@ -106,6 +106,16 @@ function draw() {
       p.moving = random() < 0.4;
     }
   }
+  
+  //Recycle obstacles
+  for (let o of obstacles) {
+    if (o.y > height + 40) {
+      o.x = random(40, width - 40);
+      o.y = random(-200, 0);
+      o.dx = random([-1, 1]) * 0.9;
+      o.moving = random(["balloon", "star"]);
+    }
+  }
 
   // Obstacles movement + collision
   for (let o of obstacles) {
@@ -201,7 +211,7 @@ function keyPressed() {
   if (gameOver && (key === "r" || key === "R")) {
     resetGame();
     gameStarted = true;
-  }
+  } 
 }
 
 // Purple cat

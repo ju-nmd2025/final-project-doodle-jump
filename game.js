@@ -268,9 +268,9 @@ function drawObstacle(o) {
   if (o.type === "balloon") {
     // Balloon body
     fill("#d1edffff");
-    ellipse(0, 0, o.size + 10, o.size + 14);
+    ellipse(0, 0, o.size + 8, o.size + 10);
     // Tie
-    fill("#d1edffff");
+    fill("blue");
     triangle(-4, o.size / 2 - 2, 4, o.size / 2 - 2, 0, o.size / 2 + 6);
     // String
     stroke(180);

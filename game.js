@@ -113,7 +113,7 @@ function draw() {
       o.x = random(40, width - 40);
       o.y = random(-200, 0);
       o.dx = random([-1, 1]) * 0.9;
-      o.moving = random(["balloon", "star"]);
+      o.type = random(["balloon", "star"]);
     }
   }
 

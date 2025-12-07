@@ -5,6 +5,7 @@ let score = 0;
 let highScore = 0;
 let gameOver = false;
 let gameStarted = false;
+let boostJump = false;
 
 function setup() {
   createCanvas(400, 600);
@@ -88,8 +89,17 @@ function draw() {
       catBottom >= p.y &&
       cat.vy > 0
     ) {
+      //cat jumps only when falling on top of platforms
       cat.y = p.y - cat.h / 2;
-      cat.vy = -10;
+
+      //boosted bounce when the down arrow was pressed on the last jump
+      let jumpStrength = -9;
+      if (boostJump) {
+        jumpStrength = -13;
+        boostJump = false;
+      }
+
+      cat.vy = jumpStrength;
       score++;
     }
   }
@@ -192,6 +202,13 @@ function handleKeyboard() {
   if (keyIsDown(RIGHT_ARROW)) {
     cat.x += 8;
     cat.y += sin(frameCount * 0.2);
+  }
+  if (keyIsDown(DOWN_ARROW)) {
+    if (cat.vy < 0) {
+      cat.vy = 0;
+    }
+    cat.vy += 1.2;
+    boostJump = true;
   }
 }
 

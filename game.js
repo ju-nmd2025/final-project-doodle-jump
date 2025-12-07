@@ -19,6 +19,16 @@ function chooseObstacleType() {
       "balloon",
       "balloon",
       "balloon",
+      "balloon",
+      "balloon",
+      "balloon",
+      "balloon",
+      "balloon",
+      "star",
+      "star",
+      "star",
+      "star",
+      "star",
       "star",
       "star",
       "star",
@@ -33,11 +43,22 @@ function chooseObstacleType() {
       "balloon",
       "balloon",
       "balloon",
+      "balloon",
+      "balloon",
+      "balloon",
+      "balloon",
+      "balloon",
       "star",
       "star",
       "star",
       "star",
       "star",
+      "star",
+      "star",
+      "star",
+      "star",
+      "star",
+      "rainbow",
       "rainbow",
     ];
     return random(types);
@@ -77,7 +98,7 @@ function resetGame() {
       y: random(140, height - 240),
       size: 30,
       dx: random([-1, 1]) * 0.8,
-      type: chooseObstacleType(), // rainbow use helper
+      type: chooseObstacleType(),
     });
   }
 
@@ -152,7 +173,7 @@ function draw() {
       o.x = random(40, width - 40);
       o.y = random(-200, 0);
       o.dx = random([-1, 1]) * 0.9;
-      o.type = chooseObstacleType(); // rainbow use helper
+      o.type = chooseObstacleType();
     }
   }
 

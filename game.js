@@ -111,7 +111,7 @@ function draw() {
       p.moving = random() < 0.4;
     }
   }
-  
+
   //Recycle obstacles
   for (let o of obstacles) {
     if (o.y > height + 40) {
@@ -212,10 +212,10 @@ function mouseClicked() {
 }
 
 function keyPressed() {
-  if (gameOver && (key === " ")) {
+  if (gameOver && key === " ") {
     resetGame();
     gameStarted = true;
-  } 
+  }
 }
  
 // Purple cat
@@ -272,9 +272,9 @@ function drawObstacle(o) {
   if (o.type === "balloon") {
     // Balloon body
     fill("#d1edffff");
-    ellipse(0, 0, o.size + 10, o.size + 14);
+    ellipse(0, 0, o.size + 8, o.size + 10);
     // Tie
-    fill("#ff69b4");
+    fill("blue");
     triangle(-4, o.size / 2 - 2, 4, o.size / 2 - 2, 0, o.size / 2 + 6);
     // String
     stroke(180);

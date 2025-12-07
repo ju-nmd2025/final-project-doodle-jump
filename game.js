@@ -40,7 +40,7 @@ function resetGame() {
       y: random(140, height - 240),
       size: 30,
       dx: random([-1, 1]) * 0.8,
-      type: random(["balloon", "star"]),
+      type: random(["balloon", "star", "rainbow"]),
     });
   }
 
@@ -115,7 +115,7 @@ function draw() {
       o.x = random(40, width - 40);
       o.y = random(-200, 0);
       o.dx = random([-1, 1]) * 0.9;
-      o.type = random(["balloon", "star"]);
+      o.type = random(["balloon", "star", "rainbow"]);
     }
   }
 
@@ -128,8 +128,19 @@ function draw() {
 
     // Round hit test: cat head circle vs obstacle circleish
     const d = dist(cat.x, cat.y, o.x, o.y);
-    if (d < o.size / 2 + cat.w / 2 - 5) {
-      gameOver = true;
+
+    if (o.type === "rainbow") {
+      if (d < o.size / 2 + cat.w / 2) {
+        // 🌈 Bonus effect
+        score += 5; // extra points
+        cat.vy = -15; // super bounce
+        createSparkles(cat.x, cat.y); // celebratory sparkles
+        o.y = height + 50; // recycle rainbow immediately
+      }
+    } else {
+      if (d < o.size / 2 + cat.w / 2 - 5) {
+        gameOver = true; // balloons and stars still end the game
+      }
     }
   }
 
@@ -307,7 +318,7 @@ function drawObstacle(o) {
 
   if (o.type === "balloon") {
     // Balloon body
-    fill("#d1edffff");
+    fill(color(209, 237, 255)); // pastel blue
     ellipse(0, 0, o.size + 8, o.size + 10);
     // Tie
     fill("blue");
@@ -321,7 +332,7 @@ function drawObstacle(o) {
     }
     endShape();
     noStroke();
-    // face
+    // Face
     fill(0);
     ellipse(-5, -3, 3, 3);
     ellipse(5, -3, 3, 3);
@@ -329,7 +340,7 @@ function drawObstacle(o) {
     noFill();
     arc(0, 3, 8, 5, 0, PI);
     noStroke();
-  } else {
+  } else if (o.type === "star") {
     // Star
     fill("#fff4a3"); // soft yellow
     star(0, 0, o.size / 2 - 4, o.size / 2 + 2, 5);
@@ -341,6 +352,23 @@ function drawObstacle(o) {
     noFill();
     arc(0, 3, 8, 5, 0, PI);
     noStroke();
+  } else if (o.type === "rainbow") {
+    // Rainbow arc
+    noFill();
+    strokeWeight(6);
+    let colors = [
+      "#ff0000",
+      "#ff7f00",
+      "#ffff00",
+      "#00ff00",
+      "#0000ff",
+      "#4b0082",
+      "#8b00ff",
+    ];
+    for (let i = 0; i < colors.length; i++) {
+      stroke(colors[i]);
+      arc(0, 0, o.size * 2 + i * 6, o.size + i * 4, PI, TWO_PI);
+    }
   }
 
   pop();

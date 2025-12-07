@@ -6,6 +6,8 @@ let score = 0;
 let highScore = 0;
 let gameOver = false;
 let gameStarted = false;
+let boostJump = false;
+let difficulty = 0;
 
 function chooseObstacleType() {
   // Check if a rainbow already exists
@@ -70,6 +72,8 @@ function setup() {
 function resetGame() {
   // Cat head is 55px across — keep w/h in sync for collisions
   cat = { x: width / 2, y: height - 120, w: 55, h: 55, vy: -8 };
+  
+  particles = [];
 
   platforms = [];
   for (let i = 0; i < 6; i++) {
@@ -89,7 +93,7 @@ function resetGame() {
       x: random(40, width - 40),
       y: random(140, height - 240),
       size: 30,
-      dx: random([-1, 1]) * 0.8,
+      dx: random([-1, 1]) * (0.4 + difficulty * 2),
       type: chooseObstacleType(),
     });
   }
@@ -99,8 +103,17 @@ function resetGame() {
 }
 
 function draw() {
-  background("#ffd1dc ");
 
+  // When the score reaches 100 the difficulty is the highest (1)
+  // It can never be more difficult than that 1.
+  difficulty = map(score, 0, 100, 0, 1, true);
+
+  // Background gets darker when increasing difficulty
+  let r = lerp(255,115, difficulty);
+  let g = lerp(209, 0, difficulty);
+  let b = lerp(220, 75, difficulty);
+  background(r, g, b);
+  
   if (!gameStarted) {
     drawStartScreen();
     return;
@@ -110,7 +123,23 @@ function draw() {
     return;
   }
 
+  // Increase obstacles number and speed
+  let moreObstacles = floor(2 + difficulty * 4);
+  
+  while (obstacles.length < moreObstacles){
+   obstacles.push({
+      x: random(40, width - 40),
+      y: random(-200, 0),
+      size: 30,
+      dx: random([-1, 1]) * (1.4 + difficulty * 2),
+      type: chooseObstacleType(),
+    });
+  }
+
   handleKeyboard();
+
+  // Remember cats position before moving
+  let prevY = cat.y;
 
   // Gravity
   cat.vy += 0.3;
@@ -127,16 +156,27 @@ function draw() {
     const catRight = cat.x + cat.w / 2;
     const catTop = cat.y - cat.h / 2;
     const catBottom = cat.y + cat.h / 2;
+    const prevBottom = prevY + cat.h / 2;
 
     if (
       catLeft < p.x + p.w &&
       catRight > p.x &&
-      catBottom > p.y &&
-      catTop < p.y + p.h &&
+      prevBottom <= p.y &&
+      catBottom >= p.y &&
       cat.vy > 0
     ) {
-      cat.vy = -10; // bounce upward
-      score++; // increase score
+      // Cat jumps only when falling on top of platforms
+      cat.y = p.y - cat.h / 2;
+
+      // Boosted bounce when the down arrow was pressed on the last jump
+      let jumpStrength = -10;
+      if (boostJump) {
+        jumpStrength = -14;
+        boostJump = false;
+      }
+
+      cat.vy = jumpStrength;
+      score++;
       createSparkles(cat.x, cat.y); // ✨ add sparkles here
     }
   }
@@ -147,13 +187,16 @@ function draw() {
     cat.y = 300;
     for (let p of platforms) p.y += dy;
     for (let o of obstacles) o.y += dy;
+    for (let pa of particles) pa.y += dy;
   }
 
-  // Recycle platforms
+  // Recycle platforms + decrease respawn with difficulty level
   for (let p of platforms) {
     if (p.y > height) {
       p.x = random(0, width - p.w);
-      p.y = 0;
+      let initialGap = 80;
+      let extraGap = difficulty * 200;
+      p.y = -random(initialGap, initialGap + extraGap);
       p.dx = random([-1, 1]) * random(0.5, 1.2);
       p.moving = random() < 0.4;
     }
@@ -164,7 +207,7 @@ function draw() {
     if (o.y > height + 40) {
       o.x = random(40, width - 40);
       o.y = random(-200, 0);
-      o.dx = random([-1, 1]) * 0.9;
+      o.dx = random([-1, 1]) * (0.4 + difficulty * 2);
       o.type = chooseObstacleType();
     }
   }
@@ -173,8 +216,6 @@ function draw() {
   for (let o of obstacles) {
     o.x += o.dx;
     if (o.x < 20 || o.x > width - 20) o.dx *= -1;
-
-    drawObstacle(o);
 
     // Round hit test: cat head circle vs obstacle circleish
     const d = dist(cat.x, cat.y, o.x, o.y);
@@ -198,7 +239,9 @@ function draw() {
   updateDifficulty();
 
   // Draw platforms and cat
+  // Draw platforms, obstacles and cat
   for (let p of platforms) drawCloud(p.x, p.y, p.w);
+  for (let o of obstacles) drawObstacle(o);
   drawCuteCat(cat.x, cat.y);
 
   // HUD
@@ -239,7 +282,7 @@ function drawGameOver() {
     localStorage.setItem("catCloudHighScore", highScore);
   }
 
-  fill("#ff1493");
+  fill("#54003c");
   textSize(32);
   textAlign(CENTER);
   text("Game Over!", width / 2, height / 2 - 60);
@@ -257,6 +300,13 @@ function handleKeyboard() {
   if (keyIsDown(RIGHT_ARROW)) {
     cat.x += 8;
     cat.y += sin(frameCount * 0.2);
+  }
+  if (keyIsDown(DOWN_ARROW)) {
+    if (cat.vy < 0) {
+      cat.vy = 0;
+    }
+    cat.vy += 1.2;
+    boostJump = true;
   }
 }
 

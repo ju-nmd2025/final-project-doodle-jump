@@ -61,6 +61,9 @@ function draw() {
 
   handleKeyboard();
 
+  //remember cats position before moving
+  let prevY = cat.y;
+
   // Gravity
   cat.vy += 0.3;
   cat.y += cat.vy;
@@ -76,14 +79,16 @@ function draw() {
     const catRight = cat.x + cat.w / 2;
     const catTop = cat.y - cat.h / 2;
     const catBottom = cat.y + cat.h / 2;
+    const prevBottom = prevY + cat.h / 2;
 
     if (
       catLeft < p.x + p.w &&
       catRight > p.x &&
-      catBottom > p.y &&
-      catTop < p.y + p.h &&
+      prevBottom <= p.y &&
+      catBottom >= p.y &&
       cat.vy > 0
     ) {
+      cat.y = p.y - cat.h / 2;
       cat.vy = -10;
       score++;
     }
@@ -113,7 +118,7 @@ function draw() {
       o.x = random(40, width - 40);
       o.y = random(-200, 0);
       o.dx = random([-1, 1]) * 0.8;
-      o.moving = random(["balloon", "star"]);
+      o.type = random(["balloon", "star"]);
     }
   }
 
@@ -213,7 +218,7 @@ function keyPressed() {
     gameStarted = true;
   } 
 }
-
+ 
 // Purple cat
 function drawCuteCat(x, y) {
   // Head

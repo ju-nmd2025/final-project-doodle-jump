@@ -1,12 +1,63 @@
 let cat;
 let platforms = [];
 let obstacles = [];
+let particles = [];
 let score = 0;
 let highScore = 0;
 let gameOver = false;
 let gameStarted = false;
 let boostJump = false;
 let difficulty = 0;
+
+function chooseObstacleType() {
+  // Check if a rainbow already exists
+  let rainbowExists = obstacles.some((o) => o.type === "rainbow");
+
+  if (rainbowExists) {
+    // Only allow balloon or star if rainbow is already on screen
+    return random([
+      "balloon",
+      "balloon",
+      "balloon",
+      "balloon",
+      "balloon",
+      "balloon",
+      "balloon",
+      "balloon",
+      "star",
+      "star",
+      "star",
+      "star",
+      "star",
+      "star",
+      "star",
+      "star",
+    ]);
+  } else {
+    // Weighted choice including rare rainbow
+    let types = [
+      "balloon",
+      "balloon",
+      "balloon",
+      "balloon",
+      "balloon",
+      "balloon",
+      "balloon",
+      "balloon",
+      "star",
+      "star",
+      "star",
+      "star",
+      "star",
+      "star",
+      "star",
+      "star",
+      "rainbow",
+      "rainbow",
+    ];
+    return random(types);
+  }
+}
 
 function setup() {
   createCanvas(400, 600);
@@ -21,6 +72,8 @@ function setup() {
 function resetGame() {
   // Cat head is 55px across — keep w/h in sync for collisions
   cat = { x: width / 2, y: height - 120, w: 55, h: 55, vy: -8 };
+  
+  particles = [];
 
   platforms = [];
   for (let i = 0; i < 6; i++) {
@@ -41,7 +94,7 @@ function resetGame() {
       y: random(140, height - 240),
       size: 30,
       dx: random([-1, 1]) * (0.4 + difficulty * 2),
-      type: random(["balloon", "star"]),
+      type: chooseObstacleType(),
     });
   }
 
@@ -79,7 +132,7 @@ function draw() {
       y: random(-200, 0),
       size: 30,
       dx: random([-1, 1]) * (1.4 + difficulty * 2),
-      type: random(["balloon", "star"]),
+      type: chooseObstacleType(),
     });
   }
 
@@ -124,6 +177,7 @@ function draw() {
 
       cat.vy = jumpStrength;
       score++;
+      createSparkles(cat.x, cat.y); // ✨ add sparkles here
     }
   }
 
@@ -133,6 +187,7 @@ function draw() {
     cat.y = 300;
     for (let p of platforms) p.y += dy;
     for (let o of obstacles) o.y += dy;
+    for (let pa of particles) pa.y += dy;
   }
 
   // Recycle platforms + decrease respawn with difficulty level
@@ -153,7 +208,7 @@ function draw() {
       o.x = random(40, width - 40);
       o.y = random(-200, 0);
       o.dx = random([-1, 1]) * (0.4 + difficulty * 2);
-      o.type = random(["balloon", "star"]);
+      o.type = chooseObstacleType();
     }
   }
 
@@ -164,11 +219,26 @@ function draw() {
 
     // Round hit test: cat head circle vs obstacle circleish
     const d = dist(cat.x, cat.y, o.x, o.y);
-    if (d < o.size / 2 + cat.w / 2 - 5) {
-      gameOver = true;
+
+    if (o.type === "rainbow") {
+      if (d < o.size / 2 + cat.w / 2) {
+        // 🌈 Bonus effect
+        score += 5; // extra points
+        cat.vy = -15; // super bounce
+        createSparkles(cat.x, cat.y); // celebratory sparkles
+        o.y = height + 50; // recycle rainbow immediately
+      }
+    } else {
+      if (d < o.size / 2 + cat.w / 2 - 5) {
+        gameOver = true; // balloons and stars still end the game
+      }
     }
   }
 
+  // Increase difficulty as score rises
+  updateDifficulty();
+
+  // Draw platforms and cat
   // Draw platforms, obstacles and cat
   for (let p of platforms) drawCloud(p.x, p.y, p.w);
   for (let o of obstacles) drawObstacle(o);
@@ -185,6 +255,9 @@ function draw() {
 
   // Keep cat within canvas
   cat.x = constrain(cat.x, cat.w / 2, width - cat.w / 2);
+
+  // ✨ Update sparkles last so they appear on top
+  updateSparkles();
 }
 
 function drawStartScreen() {
@@ -260,6 +333,41 @@ function keyPressed() {
   }
 }
 
+function createSparkles(x, y) {
+  for (let i = 0; i < 12; i++) {
+    particles.push({
+      x: x,
+      y: y,
+      vx: random(-2, 2),
+      vy: random(-2, -0.5),
+      life: 60, // frames until fade
+      size: random(3, 6),
+      color: color(random(200, 255), random(150, 255), random(200, 255)),
+    });
+  }
+}
+
+function updateSparkles() {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    let p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.05; // gravity
+    p.life--;
+
+    noStroke();
+    fill(
+      p.color.levels[0],
+      p.color.levels[1],
+      p.color.levels[2],
+      map(p.life, 0, 60, 0, 255)
+    );
+    ellipse(p.x, p.y, p.size);
+
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+}
+
 // Purple cat
 function drawCuteCat(x, y) {
   // Head
@@ -313,7 +421,7 @@ function drawObstacle(o) {
 
   if (o.type === "balloon") {
     // Balloon body
-    fill("#d1edffff");
+    fill(color(209, 237, 255)); // pastel blue
     ellipse(0, 0, o.size + 8, o.size + 10);
     // Tie
     fill("blue");
@@ -327,7 +435,7 @@ function drawObstacle(o) {
     }
     endShape();
     noStroke();
-    // face
+    // Face
     fill(0);
     ellipse(-5, -3, 3, 3);
     ellipse(5, -3, 3, 3);
@@ -335,7 +443,7 @@ function drawObstacle(o) {
     noFill();
     arc(0, 3, 8, 5, 0, PI);
     noStroke();
-  } else {
+  } else if (o.type === "star") {
     // Star
     fill("#fff4a3"); // soft yellow
     star(0, 0, o.size / 2 - 4, o.size / 2 + 2, 5);
@@ -347,6 +455,23 @@ function drawObstacle(o) {
     noFill();
     arc(0, 3, 8, 5, 0, PI);
     noStroke();
+  } else if (o.type === "rainbow") {
+    // Rainbow arc
+    noFill();
+    strokeWeight(6);
+    let colors = [
+      "#ff0000",
+      "#ff7f00",
+      "#ffff00",
+      "#00ff00",
+      "#0000ff",
+      "#4b0082",
+      "#8b00ff",
+    ];
+    for (let i = 0; i < colors.length; i++) {
+      stroke(colors[i]);
+      arc(0, 0, o.size * 2 + i * 6, o.size + i * 4, PI, TWO_PI);
+    }
   }
 
   pop();
@@ -372,4 +497,25 @@ function drawCloud(x, y, w) {
   ellipse(x + w / 2, y + 10, 50, 35);
   ellipse(x + w - 20, y + 10, 40, 30);
   noStroke();
+}
+
+function updateDifficulty() {
+  // Make platforms move faster as score increases
+  for (let p of platforms) {
+    if (p.moving) {
+      p.dx *= 1 + score * 0.00005; // gradual speed increase
+    }
+    // Shrink platforms after score > 30
+    if (score > 20) {
+      p.w = max(40, 80 - score * 0.2);
+    }
+  }
+
+  // Make obstacles move faster
+  for (let o of obstacles) {
+    o.dx *= 1 + score * 0.000005;
+  }
+
+  // Increase gravity slightly over time
+  cat.vy += score * 0.0005;
 }

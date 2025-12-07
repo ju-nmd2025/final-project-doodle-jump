@@ -7,6 +7,43 @@ let highScore = 0;
 let gameOver = false;
 let gameStarted = false;
 
+function chooseObstacleType() {
+  // Check if a rainbow already exists
+  let rainbowExists = obstacles.some((o) => o.type === "rainbow");
+
+  if (rainbowExists) {
+    // Only allow balloon or star if rainbow is already on screen
+    return random([
+      "balloon",
+      "balloon",
+      "balloon",
+      "balloon",
+      "balloon",
+      "star",
+      "star",
+      "star",
+      "star",
+      "star",
+    ]);
+  } else {
+    // Weighted choice including rare rainbow
+    let types = [
+      "balloon",
+      "balloon",
+      "balloon",
+      "balloon",
+      "balloon",
+      "star",
+      "star",
+      "star",
+      "star",
+      "star",
+      "rainbow",
+    ];
+    return random(types);
+  }
+}
+
 function setup() {
   createCanvas(400, 600);
   textFont("Comic Sans MS");
@@ -40,7 +77,7 @@ function resetGame() {
       y: random(140, height - 240),
       size: 30,
       dx: random([-1, 1]) * 0.8,
-      type: random(["balloon", "star", "rainbow"]),
+      type: chooseObstacleType(), // rainbow use helper
     });
   }
 
@@ -115,7 +152,7 @@ function draw() {
       o.x = random(40, width - 40);
       o.y = random(-200, 0);
       o.dx = random([-1, 1]) * 0.9;
-      o.type = random(["balloon", "star", "rainbow"]);
+      o.type = chooseObstacleType(); // rainbow use helper
     }
   }
 

@@ -202,6 +202,9 @@ function draw() {
     }
   }
 
+  // Increase difficulty as score rises
+  updateDifficulty();
+
   // Draw platforms and cat
   for (let p of platforms) drawCloud(p.x, p.y, p.w);
   drawCuteCat(cat.x, cat.y);
@@ -452,4 +455,36 @@ function drawCloud(x, y, w) {
   ellipse(x + w / 2, y + 10, 50, 35);
   ellipse(x + w - 20, y + 10, 40, 30);
   noStroke();
+}
+
+function updateDifficulty() {
+  // Make platforms move faster as score increases
+  for (let p of platforms) {
+    if (p.moving) {
+      p.dx *= 1 + score * 0.0005; // gradual speed increase
+    }
+    // Shrink platforms after score > 30
+    if (score > 30) {
+      p.w = max(40, 80 - score * 0.2);
+    }
+  }
+
+  // Make obstacles move faster
+  for (let o of obstacles) {
+    o.dx *= 1 + score * 0.0005;
+  }
+
+  // Increase gravity slightly over time
+  cat.vy += score * 0.0005;
+
+  // Add extra obstacles every 20 points
+  if (score > 0 && score % 20 === 0 && obstacles.length < 5) {
+    obstacles.push({
+      x: random(40, width - 40),
+      y: random(-200, 0),
+      size: 30,
+      dx: random([-1, 1]) * 1.2,
+      type: chooseObstacleType(),
+    });
+  }
 }

@@ -1,6 +1,7 @@
 let cat;
 let platforms = [];
 let obstacles = [];
+let particles = [];
 let score = 0;
 let highScore = 0;
 let gameOver = false;
@@ -84,8 +85,9 @@ function draw() {
       catTop < p.y + p.h &&
       cat.vy > 0
     ) {
-      cat.vy = -10;
-      score++;
+      cat.vy = -10; // bounce upward
+      score++; // increase score
+      createSparkles(cat.x, cat.y); // ✨ add sparkles here
     }
   }
 
@@ -146,6 +148,9 @@ function draw() {
 
   // Keep cat within canvas
   cat.x = constrain(cat.x, cat.w / 2, width - cat.w / 2);
+
+  // ✨ Update sparkles last so they appear on top
+  updateSparkles();
 }
 
 function drawStartScreen() {
@@ -211,6 +216,41 @@ function keyPressed() {
   if (gameOver && key === " ") {
     resetGame();
     gameStarted = true;
+  }
+}
+
+function createSparkles(x, y) {
+  for (let i = 0; i < 12; i++) {
+    particles.push({
+      x: x,
+      y: y,
+      vx: random(-2, 2),
+      vy: random(-2, -0.5),
+      life: 60, // frames until fade
+      size: random(3, 6),
+      color: color(random(200, 255), random(150, 255), random(200, 255)),
+    });
+  }
+}
+
+function updateSparkles() {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    let p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.05; // gravity
+    p.life--;
+
+    noStroke();
+    fill(
+      p.color.levels[0],
+      p.color.levels[1],
+      p.color.levels[2],
+      map(p.life, 0, 60, 0, 255)
+    );
+    ellipse(p.x, p.y, p.size);
+
+    if (p.life <= 0) particles.splice(i, 1);
   }
 }
 

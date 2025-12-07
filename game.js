@@ -6,6 +6,7 @@ let highScore = 0;
 let gameOver = false;
 let gameStarted = false;
 let boostJump = false;
+let difficulty = 0;
 
 function setup() {
   createCanvas(400, 600);
@@ -39,7 +40,7 @@ function resetGame() {
       x: random(40, width - 40),
       y: random(140, height - 240),
       size: 30,
-      dx: random([-1, 1]) * 1.4,
+      dx: random([-1, 1]) * (0.4 + difficulty * 2),
       type: random(["balloon", "star"]),
     });
   }
@@ -49,8 +50,17 @@ function resetGame() {
 }
 
 function draw() {
-  background("#ffd1dc ");
 
+  // When the score reaches 100 the difficulty is the highest (1)
+  // It can never be more difficult than that 1.
+  difficulty = map(score, 0, 100, 0, 1, true);
+
+  // Background gets darker when increasing difficulty
+  let r = lerp(255,115, difficulty);
+  let g = lerp(209, 0, difficulty);
+  let b = lerp(220, 75, difficulty);
+  background(r, g, b);
+  
   if (!gameStarted) {
     drawStartScreen();
     return;
@@ -60,9 +70,22 @@ function draw() {
     return;
   }
 
+  // Increase obstacles number and speed
+  let moreObstacles = floor(2 + difficulty * 4);
+  
+  while (obstacles.length < moreObstacles){
+   obstacles.push({
+      x: random(40, width - 40),
+      y: random(-200, 0),
+      size: 30,
+      dx: random([-1, 1]) * (1.4 + difficulty * 2),
+      type: random(["balloon", "star"]),
+    });
+  }
+
   handleKeyboard();
 
-  //remember cats position before moving
+  // Remember cats position before moving
   let prevY = cat.y;
 
   // Gravity
@@ -89,13 +112,13 @@ function draw() {
       catBottom >= p.y &&
       cat.vy > 0
     ) {
-      //cat jumps only when falling on top of platforms
+      // Cat jumps only when falling on top of platforms
       cat.y = p.y - cat.h / 2;
 
-      //boosted bounce when the down arrow was pressed on the last jump
-      let jumpStrength = -9;
+      // Boosted bounce when the down arrow was pressed on the last jump
+      let jumpStrength = -10;
       if (boostJump) {
-        jumpStrength = -13;
+        jumpStrength = -14;
         boostJump = false;
       }
 
@@ -112,11 +135,13 @@ function draw() {
     for (let o of obstacles) o.y += dy;
   }
 
-  // Recycle platforms
+  // Recycle platforms + decrease respawn with difficulty level
   for (let p of platforms) {
     if (p.y > height) {
       p.x = random(0, width - p.w);
-      p.y = 0;
+      let initialGap = 80;
+      let extraGap = difficulty * 200;
+      p.y = -random(initialGap, initialGap + extraGap);
       p.dx = random([-1, 1]) * random(0.5, 1.2);
       p.moving = random() < 0.4;
     }
@@ -127,7 +152,7 @@ function draw() {
     if (o.y > height + 40) {
       o.x = random(40, width - 40);
       o.y = random(-200, 0);
-      o.dx = random([-1, 1]) * 1.4;
+      o.dx = random([-1, 1]) * (0.4 + difficulty * 2);
       o.type = random(["balloon", "star"]);
     }
   }
@@ -184,7 +209,7 @@ function drawGameOver() {
     localStorage.setItem("catCloudHighScore", highScore);
   }
 
-  fill("#ff1493");
+  fill("#54003c");
   textSize(32);
   textAlign(CENTER);
   text("Game Over!", width / 2, height / 2 - 60);
@@ -234,7 +259,7 @@ function keyPressed() {
     gameStarted = true;
   }
 }
- 
+
 // Purple cat
 function drawCuteCat(x, y) {
   // Head

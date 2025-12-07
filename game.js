@@ -38,7 +38,7 @@ function resetGame() {
       x: random(40, width - 40),
       y: random(140, height - 240),
       size: 30,
-      dx: random([-1, 1]) * 0.8,
+      dx: random([-1, 1]) * 1.4,
       type: random(["balloon", "star"]),
     });
   }
@@ -61,6 +61,9 @@ function draw() {
 
   handleKeyboard();
 
+  //remember cats position before moving
+  let prevY = cat.y;
+
   // Gravity
   cat.vy += 0.3;
   cat.y += cat.vy;
@@ -76,14 +79,16 @@ function draw() {
     const catRight = cat.x + cat.w / 2;
     const catTop = cat.y - cat.h / 2;
     const catBottom = cat.y + cat.h / 2;
+    const prevBottom = prevY + cat.h / 2;
 
     if (
       catLeft < p.x + p.w &&
       catRight > p.x &&
-      catBottom > p.y &&
-      catTop < p.y + p.h &&
+      prevBottom <= p.y &&
+      catBottom >= p.y &&
       cat.vy > 0
     ) {
+      cat.y = p.y - cat.h / 2;
       cat.vy = -10;
       score++;
     }
@@ -112,7 +117,7 @@ function draw() {
     if (o.y > height + 40) {
       o.x = random(40, width - 40);
       o.y = random(-200, 0);
-      o.dx = random([-1, 1]) * 0.9;
+      o.dx = random([-1, 1]) * 1.4;
       o.type = random(["balloon", "star"]);
     }
   }
@@ -122,8 +127,6 @@ function draw() {
     o.x += o.dx;
     if (o.x < 20 || o.x > width - 20) o.dx *= -1;
 
-    drawObstacle(o);
-
     // Round hit test: cat head circle vs obstacle circleish
     const d = dist(cat.x, cat.y, o.x, o.y);
     if (d < o.size / 2 + cat.w / 2 - 5) {
@@ -131,8 +134,9 @@ function draw() {
     }
   }
 
-  // Draw platforms and cat
+  // Draw platforms, obstacles and cat
   for (let p of platforms) drawCloud(p.x, p.y, p.w);
+  for (let o of obstacles) drawObstacle(o);
   drawCuteCat(cat.x, cat.y);
 
   // HUD
@@ -213,7 +217,7 @@ function keyPressed() {
     gameStarted = true;
   }
 }
-
+ 
 // Purple cat
 function drawCuteCat(x, y) {
   // Head

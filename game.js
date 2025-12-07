@@ -213,7 +213,7 @@ function keyPressed() {
     gameStarted = true;
   } 
 }
-
+ 
 // Purple cat
 function drawCuteCat(x, y) {
   // Head

@@ -38,7 +38,7 @@ function resetGame() {
       x: random(40, width - 40),
       y: random(140, height - 240),
       size: 30,
-      dx: random([-1, 1]) * 0.8,
+      dx: random([-1, 1]) * 1.4,
       type: random(["balloon", "star"]),
     });
   }
@@ -117,7 +117,7 @@ function draw() {
     if (o.y > height + 40) {
       o.x = random(40, width - 40);
       o.y = random(-200, 0);
-      o.dx = random([-1, 1]) * 0.8;
+      o.dx = random([-1, 1]) * 1.4;
       o.type = random(["balloon", "star"]);
     }
   }
@@ -127,8 +127,6 @@ function draw() {
     o.x += o.dx;
     if (o.x < 20 || o.x > width - 20) o.dx *= -1;
 
-    drawObstacle(o);
-
     // Round hit test: cat head circle vs obstacle circleish
     const d = dist(cat.x, cat.y, o.x, o.y);
     if (d < o.size / 2 + cat.w / 2 - 5) {
@@ -136,8 +134,9 @@ function draw() {
     }
   }
 
-  // Draw platforms and cat
+  // Draw platforms, obstacles and cat
   for (let p of platforms) drawCloud(p.x, p.y, p.w);
+  for (let o of obstacles) drawObstacle(o);
   drawCuteCat(cat.x, cat.y);
 
   // HUD

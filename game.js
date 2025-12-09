@@ -72,8 +72,10 @@ function setup() {
 function resetGame() {
   // Cat head is 55px across — keep w/h in sync for collisions
   cat = { x: width / 2, y: height - 120, w: 55, h: 55, vy: -8 };
-  
   particles = [];
+  difficulty = 0;
+  score = 0;
+  gameOver = false;
 
   platforms = [];
   for (let i = 0; i < 6; i++) {
@@ -84,6 +86,7 @@ function resetGame() {
       h: 20,
       dx: random([-1, 1]) * random(0.5, 1.2),
       moving: random() < 0.4,
+      scored: false
     });
   }
 
@@ -176,8 +179,13 @@ function draw() {
       }
 
       cat.vy = jumpStrength;
-      score++;
-      createSparkles(cat.x, cat.y); // ✨ add sparkles here
+
+      if (!p.scored) { 
+        score++;
+        p.scored = true;
+      }
+
+      createSparkles(cat.x, cat.y);
     }
   }
 
@@ -199,6 +207,7 @@ function draw() {
       p.y = -random(initialGap, initialGap + extraGap);
       p.dx = random([-1, 1]) * random(0.5, 1.2);
       p.moving = random() < 0.4;
+      p.scored = false;
     }
   }
 
@@ -500,22 +509,9 @@ function drawCloud(x, y, w) {
 }
 
 function updateDifficulty() {
-  // Make platforms move faster as score increases
-  for (let p of platforms) {
-    if (p.moving) {
-      p.dx *= 1 + score * 0.00005; // gradual speed increase
-    }
-    // Shrink platforms after score > 30
-    if (score > 20) {
-      p.w = max(40, 80 - score * 0.2);
+  if (score > 30){
+    for (let p of platforms) {
+      p.w = max(50,80 - (score - 30) * 0.3);
     }
   }
-
-  // Make obstacles move faster
-  for (let o of obstacles) {
-    o.dx *= 1 + score * 0.000005;
-  }
-
-  // Increase gravity slightly over time
-  cat.vy += score * 0.0005;
 }

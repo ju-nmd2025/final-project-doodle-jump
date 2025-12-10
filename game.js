@@ -8,6 +8,7 @@ let gameOver = false;
 let gameStarted = false;
 let boostJump = false;
 let difficulty = 0;
+let raindrops = [];
 
 function chooseObstacleType() {
   // Check if a rainbow already exists
@@ -73,12 +74,16 @@ function resetGame() {
   // Cat head is 55px across — keep w/h in sync for collisions
   cat = { x: width / 2, y: height - 120, w: 55, h: 55, vy: -8 };
   particles = [];
+  raindrops = [];
   difficulty = 0;
   score = 0;
   gameOver = false;
 
   platforms = [];
   for (let i = 0; i < 6; i++) {
+    
+    let breakingPlatform = random() < 0.2;
+
     platforms.push({
       x: random(0, width - 80),
       y: i * 100,
@@ -86,7 +91,9 @@ function resetGame() {
       h: 20,
       dx: random([-1, 1]) * random(0.5, 1.2),
       moving: random() < 0.4,
-      scored: false
+      scored: false,
+      breaking: breakingPlatform,
+      broken: false
     });
   }
 
@@ -155,6 +162,10 @@ function draw() {
       if (p.x < 0 || p.x + p.w > width) p.dx *= -1;
     }
 
+    if (p.broken) {
+      continue;
+    }
+
     const catLeft = cat.x - cat.w / 2;
     const catRight = cat.x + cat.w / 2;
     const catTop = cat.y - cat.h / 2;
@@ -186,6 +197,11 @@ function draw() {
       }
 
       createSparkles(cat.x, cat.y);
+
+      if (p.breaking) {
+        p.broken = true;
+        createRaindrops(p);
+      }
     }
   }
 
@@ -196,6 +212,7 @@ function draw() {
     for (let p of platforms) p.y += dy;
     for (let o of obstacles) o.y += dy;
     for (let pa of particles) pa.y += dy;
+    for (let d of raindrops) d.y += dy;
   }
 
   // Recycle platforms + decrease respawn with difficulty level
@@ -208,6 +225,8 @@ function draw() {
       p.dx = random([-1, 1]) * random(0.5, 1.2);
       p.moving = random() < 0.4;
       p.scored = false;
+      p.breaking = random() < 0.2;
+      p.broken = false;
     }
   }
 
@@ -232,10 +251,10 @@ function draw() {
     if (o.type === "rainbow") {
       if (d < o.size / 2 + cat.w / 2) {
         // 🌈 Bonus effect
-        score += 5; // extra points
-        cat.vy = -15; // super bounce
-        createSparkles(cat.x, cat.y); // celebratory sparkles
-        o.y = height + 50; // recycle rainbow immediately
+        score += 5;
+        cat.vy = -15;
+        createSparkles(cat.x, cat.y);
+        o.y = height + 50;
       }
     } else {
       if (d < o.size / 2 + cat.w / 2 - 5) {
@@ -249,7 +268,7 @@ function draw() {
 
   // Draw platforms and cat
   // Draw platforms, obstacles and cat
-  for (let p of platforms) drawCloud(p.x, p.y, p.w);
+  for (let p of platforms) drawCloud(p);
   for (let o of obstacles) drawObstacle(o);
   drawCuteCat(cat.x, cat.y);
 
@@ -265,7 +284,7 @@ function draw() {
   // Keep cat within canvas
   cat.x = constrain(cat.x, cat.w / 2, width - cat.w / 2);
 
-  // ✨ Update sparkles last so they appear on top
+  updateRaindrops();
   updateSparkles();
 }
 
@@ -375,6 +394,33 @@ function updateSparkles() {
 
     if (p.life <= 0) particles.splice(i, 1);
   }
+}
+
+function createRaindrops(p) {
+  for (let i = 0; i < 15; i++) {
+    raindrops.push({
+      x: p.x + random(10, p.w -10),
+      y: p.y + 15,
+      vy: random(4,7),
+      len: random(8, 14)
+    });
+  }
+}
+
+function updateRaindrops() {
+  for (let i = raindrops.length - 1; i >= 0; i--) {
+    let d = raindrops[i];
+    d.y += d.vy;
+
+    stroke(100, 150, 255, 220);
+    strokeWeight(2);
+    line(d.x, d.y, d.x, d.y + d.len);
+
+    if (d.y > height + 20) {
+      raindrops.splice(i, 1);
+    }
+  }
+  noStroke();
 }
 
 // Purple cat
@@ -498,13 +544,21 @@ function star(x, y, r1, r2, n) {
 }
 
 // Cloud platforms
-function drawCloud(x, y, w) {
-  fill(255);
+function drawCloud(p) {
+
+  if (p.broken) return;
+  if (p.breaking) { //rainy clouds
+    fill(200);
+    stroke(130);
+  } else { //normal clouds
+    fill(255);
   stroke(200);
+  }
+  
   strokeWeight(1);
-  ellipse(x + 20, y + 10, 40, 30);
-  ellipse(x + w / 2, y + 10, 50, 35);
-  ellipse(x + w - 20, y + 10, 40, 30);
+  ellipse(p.x + 20, p.y + 10, 40, 30);
+  ellipse(p.x + p.w / 2, p.y + 10, 50, 35);
+  ellipse(p.x + p.w - 20, p.y + 10, 40, 30);
   noStroke();
 }
 

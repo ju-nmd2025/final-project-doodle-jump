@@ -548,7 +548,7 @@ function drawCloud(p) {
 
   if (p.broken) return;
   if (p.breaking) { //rainy clouds
-    fill(200);
+    fill(2);
     stroke(130);
   } else { //normal clouds
     fill(255);

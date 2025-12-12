@@ -85,7 +85,7 @@ function resetGame() {
     let breakingPlatform = random() < 0.2;
 
     platforms.push({
-      x: random(0, width - 80),
+      x: random(0, width - 60),
       y: i * 100,
       w: 80,
       h: 20,
@@ -96,6 +96,7 @@ function resetGame() {
       broken: false
     });
   }
+  pop();
 
   obstacles = [];
   for (let i = 0; i < 2; i++) {
@@ -113,17 +114,16 @@ function resetGame() {
 }
 
 function draw() {
-
   // When the score reaches 100 the difficulty is the highest (1)
   // It can never be more difficult than that 1.
   difficulty = map(score, 0, 100, 0, 1, true);
 
   // Background gets darker when increasing difficulty
-  let r = lerp(255,115, difficulty);
+  let r = lerp(255, 115, difficulty);
   let g = lerp(209, 0, difficulty);
   let b = lerp(220, 75, difficulty);
   background(r, g, b);
-  
+
   if (!gameStarted) {
     drawStartScreen();
     return;
@@ -131,19 +131,6 @@ function draw() {
   if (gameOver) {
     drawGameOver();
     return;
-  }
-
-  // Increase obstacles number and speed
-  let moreObstacles = floor(2 + difficulty * 4);
-  
-  while (obstacles.length < moreObstacles){
-   obstacles.push({
-      x: random(40, width - 40),
-      y: random(-200, 0),
-      size: 30,
-      dx: random([-1, 1]) * (1.4 + difficulty * 2),
-      type: chooseObstacleType(),
-    });
   }
 
   handleKeyboard();
@@ -191,7 +178,8 @@ function draw() {
 
       cat.vy = jumpStrength;
 
-      if (!p.scored) { 
+      if (!p.scored) {
+        console.log("score!");
         score++;
         p.scored = true;
       }
@@ -215,13 +203,11 @@ function draw() {
     for (let d of raindrops) d.y += dy;
   }
 
-  // Recycle platforms + decrease respawn with difficulty level
+  // Recycle platforms
   for (let p of platforms) {
     if (p.y > height) {
       p.x = random(0, width - p.w);
-      let initialGap = 80;
-      let extraGap = difficulty * 200;
-      p.y = -random(initialGap, initialGap + extraGap);
+      p.y = 0;
       p.dx = random([-1, 1]) * random(0.5, 1.2);
       p.moving = random() < 0.4;
       p.scored = false;
@@ -235,7 +221,7 @@ function draw() {
     if (o.y > height + 40) {
       o.x = random(40, width - 40);
       o.y = random(-200, 0);
-      o.dx = random([-1, 1]) * (0.4 + difficulty * 2);
+      o.dx = random([-1, 1]) * 0.9;
       o.type = chooseObstacleType();
     }
   }
@@ -250,11 +236,11 @@ function draw() {
 
     if (o.type === "rainbow") {
       if (d < o.size / 2 + cat.w / 2) {
-        // 🌈 Bonus effect
-        score += 5;
-        cat.vy = -15;
-        createSparkles(cat.x, cat.y);
-        o.y = height + 50;
+        // Bonus effect
+        score += 5; // extra points
+        cat.vy = -15; // super bounce
+        createSparkles(cat.x, cat.y); // celebratory sparkles
+        o.y = height + 50; // recycle rainbow immediately
       }
     } else {
       if (d < o.size / 2 + cat.w / 2 - 5) {
@@ -310,7 +296,7 @@ function drawGameOver() {
     localStorage.setItem("catCloudHighScore", highScore);
   }
 
-  fill("#54003c");
+  fill("#ff1493");
   textSize(32);
   textAlign(CENTER);
   text("Game Over!", width / 2, height / 2 - 60);
@@ -328,13 +314,6 @@ function handleKeyboard() {
   if (keyIsDown(RIGHT_ARROW)) {
     cat.x += 8;
     cat.y += sin(frameCount * 0.2);
-  }
-  if (keyIsDown(DOWN_ARROW)) {
-    if (cat.vy < 0) {
-      cat.vy = 0;
-    }
-    cat.vy += 1.2;
-    boostJump = true;
   }
 }
 
@@ -563,9 +542,33 @@ function drawCloud(p) {
 }
 
 function updateDifficulty() {
-  if (score > 30){
-    for (let p of platforms) {
-      p.w = max(50,80 - (score - 30) * 0.3);
+  // Make platforms move faster as score increases
+  for (let p of platforms) {
+    if (p.moving) {
+      p.dx *= 1 + score * 0.00005; // gradual speed increase
     }
+    // Shrink platforms after score > 30
+    if (score > 20) {
+      p.w = max(40, 80 - score * 0.2);
+    }
+  }
+
+  // Make obstacles move faster
+  for (let o of obstacles) {
+    o.dx *= 1 + score * 0.00005;
+  }
+
+  // Increase gravity slightly over time
+  cat.vy += score * 0.0005;
+
+  // Add extra obstacles every 20 points
+  if (score > 0 && score % 20 === 0 && obstacles.length < 5) {
+    obstacles.push({
+      x: random(40, width - 40),
+      y: random(-200, 0),
+      size: 30,
+      dx: random([-1, 1]) * 1.2,
+      type: chooseObstacleType(),
+    });
   }
 }

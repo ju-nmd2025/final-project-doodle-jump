@@ -126,19 +126,6 @@ function draw() {
     return;
   }
 
-  // Increase obstacles number and speed
-  let moreObstacles = floor(2 + difficulty * 4);
-
-  while (obstacles.length < moreObstacles) {
-    obstacles.push({
-      x: random(40, width - 40),
-      y: random(-200, 0),
-      size: 30,
-      dx: random([-1, 1]) * (1.4 + difficulty * 2),
-      type: chooseObstacleType(),
-    });
-  }
-
   handleKeyboard();
 
   // Remember cats position before moving
@@ -181,6 +168,7 @@ function draw() {
       cat.vy = jumpStrength;
 
       if (!p.scored) {
+        console.log("score!");
         score++;
         p.scored = true;
       }
@@ -205,6 +193,7 @@ function draw() {
       p.y = 0;
       p.dx = random([-1, 1]) * random(0.5, 1.2);
       p.moving = random() < 0.4;
+      p.scored = false;
     }
   }
 
@@ -502,7 +491,7 @@ function updateDifficulty() {
   // Make platforms move faster as score increases
   for (let p of platforms) {
     if (p.moving) {
-      p.dx *= 1 + score * 0.0005; // gradual speed increase
+      p.dx *= 1 + score * 0.00005; // gradual speed increase
     }
     // Shrink platforms after score > 30
     if (score > 20) {

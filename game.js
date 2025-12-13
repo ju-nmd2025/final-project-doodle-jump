@@ -560,7 +560,7 @@ function updateDifficulty() {
     if (p.moving) {
       p.dx *= 1 + score * 0.00005; // gradual speed increase
     }
-    // Shrink platforms after score > 30
+    // Shrink platforms after score > 20
     if (score > 20) {
       p.w = max(40, 80 - score * 0.2);
     }

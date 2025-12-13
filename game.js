@@ -1,12 +1,11 @@
 import Cat from "./character.js";
-import Platform from "./platforms.js";
 import Obstacle, { chooseObstacleType } from "./obstacles.js";
+import Platform from "./platforms.js";
 import Effects from "./effects.js";
 
 let cat;
 let platforms = [];
 let obstacles = [];
-let particles = [];
 let score = 0;
 let highScore = 0;
 let gameOver = false;

@@ -1,4 +1,4 @@
-function chooseObstacleType() {
+export function chooseObstacleType(obstacles) {
   const rainbowExists = obstacles.some((o) => o.type === "rainbow");
 
   if (rainbowExists) {
@@ -25,29 +25,25 @@ export default class Obstacle {
     if (this.x < 20 || this.x > width - 20) this.dx *= -1;
   }
 
-  recycle() {
+  recycle(obstacles) {
     this.x = random(40, width - 40);
     this.y = random(-200, 0);
     this.dx = random([-1, 1]) * 0.9;
-    this.type = chooseObstacleType();
+    this.type = chooseObstacleType(obstacles);
   }
 
   checkCollision(cat) {
     const d = dist(cat.x, cat.y, this.x, this.y);
 
     if (this.type === "rainbow") {
-      if (d < this.size / 2 + cat.w / 2) {
-        score += 5;
-        cat.vy = -15;
-        effects.createSparkles(cat.x, cat.y);
-        this.y = height + 50;
-      }
+      if (d < this.size / 2 + cat.w / 2) return "rainbow";
     } else {
-      if (d < this.size / 2 + cat.w / 2 - 5) {
-        gameOver = true;
-      }
+      if (d < this.size / 2 + cat.w / 2 - 5) return "hit";
     }
-  }
+
+  return "none";
+}
+
 
   draw() {
     push();
@@ -106,5 +102,3 @@ function star(x, y, r1, r2, n) {
   }
   endShape(CLOSE);
 }
-
-export {chooseObstacleType, Obstacle, star};

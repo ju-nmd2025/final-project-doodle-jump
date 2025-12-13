@@ -21,7 +21,7 @@ export default class Effects {
         color: color(
           random(200, 255),
           random(150, 255),
-          random(200, 255),
+          random(200, 255)
         ),
       });
     }

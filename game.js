@@ -1,6 +1,6 @@
 import Cat from "./character.js";
 import Platform from "./platforms.js";
-import Obstacle from "./obstacles.js";
+import Obstacle, { chooseObstacleType } from "./obstacles.js";
 import Effects from "./effects.js";
 
 let cat;
@@ -12,10 +12,13 @@ let highScore = 0;
 let gameOver = false;
 let gameStarted = false;
 let effects;
+let difficulty = 0;
 
-window.setup = function() {
+function setup() {
   createCanvas(400, 600);
   textFont("Comic Sans MS");
+
+  effects = new Effects();
 
   const saved = localStorage.getItem("catCloudHighScore");
   if (saved) highScore = parseInt(saved);
@@ -55,12 +58,12 @@ function resetGame() {
     obstacles.push(new Obstacle(
       random(40, width - 40),
       random(140, height -240),
-      chooseObstacleType()
+      chooseObstacleType(obstacles)
     ));
   }
 }
 
-window.draw = function() {
+function draw() {
   // When the score reaches 100 the difficulty is the highest (1)
   // It can never be more difficult than that 1.
   difficulty = map(score, 0, 100, 0, 1, true);
@@ -90,10 +93,21 @@ window.draw = function() {
     cat.updateGravity();
   }
 
- for (let p of platforms) {
+  for (let p of platforms) {
   p.update();
-  p.tryLand(cat, prevY + cat.h / 2);
- }
+
+  const result = p.tryLand(cat, prevY + cat.h / 2);
+
+  if (result.landed) {
+    if (result.scored) score++;
+
+    effects.createSparkles(cat.x, cat.y);
+
+    if (result.broke) {
+      effects.createRaindrops(p);
+    }
+  }
+}
 
   // Camera: keep cat around y=300, move world down
   const dy = cat.applyCamera();
@@ -117,9 +131,20 @@ window.draw = function() {
 
   for (let o of obstacles) {
   o.update();
-  o.checkCollision(cat);
+
+  const result = o.checkCollision(cat);
+  if (result === "rainbow") {
+    score += 5;
+    cat.vy = -15;
+    effects.createSparkles(cat.x, cat.y);
+    o.y = height + 50; // recycle immediately (same as before)
+  } else if (result === "hit") {
+    gameOver = true;
+  }
+
   o.draw();
-  if (o.y > height + 40) o.recycle();
+
+  if (o.y > height + 40) o.recycle(obstacles);
 }
 
   // Increase difficulty as score rises
@@ -188,7 +213,7 @@ function handleKeyboard() {
   }
 }
 
-window.mouseClicked = function() {
+function mouseClicked() {
   // Start button hit test
   if (
     !gameStarted &&
@@ -204,7 +229,7 @@ window.mouseClicked = function() {
   }
 }
 
-window.keyPressed = function() {
+function keyPressed() {
   if (gameOver && key === " ") {
     resetGame();
     gameStarted = true;
@@ -239,7 +264,7 @@ function updateDifficulty() {
     obstacles.push(new Obstacle(
     random(40, width - 40),
     random(-200, 0),
-    chooseObstacleType()
+    chooseObstacleType(obstacles)
   ));
  }
 }

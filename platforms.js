@@ -18,38 +18,38 @@ export default class Platform{
       }
     }
 
-    tryLand(cat, prevBottom){
-        if (this.broken) return false;
+    tryLand(cat, prevBottom) {
+      if (this.broken) return { landed: false, scored: false, broke: false };
 
-        const catLeft = cat.x - cat.w /2;
-        const catRight = cat.x + cat.w /2;
-        const catBottom = cat.y + cat.h /2;
+      const catLeft = cat.x - cat.w / 2;
+      const catRight = cat.x + cat.w / 2;
+      const catBottom = cat.y + cat.h / 2;
 
-        if(
-          catLeft < this.x + this.w &&
-          catRight > this.x &&
-          prevBottom <= this.y &&
-          catBottom >= this.y &&
-          cat.vy > 0
-        ){
-          cat.y = this.y - cat.h /2;
-          cat.vy = -10;
+      if (
+        catLeft < this.x + this.w &&
+        catRight > this.x &&
+        prevBottom <= this.y &&
+        catBottom >= this.y &&
+        cat.vy > 0
+      ) {
+        // bounce
+        cat.y = this.y - cat.h / 2;
+        cat.vy = -10;
 
-          if(!this.scored){
-            score++;
-            this.scored = true;
-          }
+        // scoring (platform remembers if it already scored)
+        const scoredNow = !this.scored;
+        if (scoredNow) this.scored = true;
 
-          createSparkles(cat.x, cat.y);
+        // breaking platform
+        const brokeNow = this.breaking;
+        if (brokeNow) this.broken = true;
 
-          if (this.breaking){
-            this.broken = true;
-            createRaindrops(this);
-          }
-          return true;
-        }
-        return false;
+        return { landed: true, scored: scoredNow, broke: brokeNow };
+      }
+
+      return { landed: false, scored: false, broke: false };
     }
+
 
     recycle(minY) {
     this.x = random(0, width - this.w);

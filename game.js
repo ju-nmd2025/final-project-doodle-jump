@@ -64,15 +64,26 @@ function resetGame() {
 }
 
 function draw() {
-  // When the score reaches 100 the difficulty is the highest (1)
-  // It can never be more difficult than that 1.
-  difficulty = map(score, 0, 100, 0, 1, true);
+  difficulty = map(score, 0, 50, 0, 1, true);
 
-  // Background gets darker when increasing difficulty
-  let r = lerp(255, 115, difficulty);
-  let g = lerp(209, 0, difficulty);
-  let b = lerp(220, 75, difficulty);
-  background(r, g, b);
+  // Define pastel sunset stops
+  let c1 = color("#ffd1dc "); // pastel pink
+  let c2 = color(255, 183, 197); // pink
+  let c3 = color(255, 223, 186); // peach/apricot
+  let c4 = color(200, 170, 255); // lavender
+  let c5 = color(180, 220, 255); // baby blue
+
+  // Blend across multiple stops
+  let col;
+  if (difficulty < 0.33) {
+    col = lerpColor(c1, c2, difficulty / 0.33); // pink → peach
+  } else if (difficulty < 0.66) {
+    col = lerpColor(c2, c3, (difficulty - 0.33) / 0.33); // peach → lavender
+  } else {
+    col = lerpColor(c3, c4, (difficulty - 0.66) / 0.34); // lavender → blue
+  }
+
+  background(col);
 
   if (!gameStarted) {
     drawStartScreen();

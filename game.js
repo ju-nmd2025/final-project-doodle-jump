@@ -60,6 +60,134 @@ function chooseObstacleType() {
   }
 }
 
+class Cat {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.w = 55;
+    this.h = 55;
+    this.vy = -8;
+  }
+
+  updateGravity() {
+    this.vy += 0.3;
+    this.y += this.vy;
+  }
+
+  applyCamera() {
+    if (this.y < 300) {
+      const dy = 300 - this.y;
+      this.y = 300;
+      return dy;
+    }
+    return 0;
+  }
+
+  keepInsideCanvas() {
+    this.x = constrain(this.x, this.w / 2, width - this.w /2);
+  }
+
+  draw() {
+    drawCuteCat(this.x, this.y);
+  }
+}
+
+class Platform {
+  constructor(x, y, w, moving, dx, breaking) {
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = 20;
+    this.moving = moving; 
+    this.dx = dx;
+    this.scored = false;
+    this.breaking = breaking; 
+    this.broken = false;
+  }
+
+  update() {
+    if (this.moving) {
+      this.x += this.dx;
+      if (this.x < 0 || this.x + this.w > width) {
+        this.dx *= -1;
+      }
+    }
+
+    if (this.broken) {
+      this.y += 8;
+    }
+  }
+
+  tryLand(cat, prevBottom) {
+    if (this.broken) return false;
+
+    const catLeft =cat.x - cat.w / 2;
+    const catRigth = cat.x + cat.w / 2;
+    const catBottom = cat.y + cat.h/ 2; 
+
+    if (
+      catLeft < this.x + this.w &&
+      catRigth > this.x && 
+      prevBottom <= this.y &&
+      catBottom >= this.y &&
+      cat.vy > 0
+    ) {
+      cat.y = this.y - cat.h / 2;
+      cat.vy = -10;
+
+      if (!this.scored) {
+        score++;
+        this.scored = true;
+      }
+
+      createSparkles(cat.x, cat.y);
+
+      if (this.breaking) {
+        this.broken = true;
+        createRaindrops(this);
+      }
+
+      return true;
+    }
+
+    return false;
+  }
+
+  recycle(minY) {
+    this.x = random(0, width - this.w);
+
+    // vertical distance between platforms
+    const gapMin = 80;
+    const gapMax = 140;
+
+    this.y = minY - random(gapMin, gapMax);
+
+    this.dx = random([-1, 1]) * random(0.5, 1.2);
+    this.moving = random() < 0.4;
+    this.scored = false;
+    this.breaking = random() < 0.2;
+    this.broken = false;
+  }
+
+  draw() {
+    if (this.broken) return; 
+
+    if (this.breaking) {
+      fill(2);
+      stroke(130);
+    } else {
+      fill(255);
+      stroke(200);
+    }
+
+    strokeWeight(1);
+    ellipse(this.x + 20, this.y + 10, 40, 30);
+    ellipse(this.x + this.w / 2, this.y + 10, 50, 35);
+    ellipse(this.x + this.w - 20, this.y + 10, 40, 30);
+    noStroke();
+  }
+}
+
 function setup() {
   createCanvas(400, 600);
   textFont("Comic Sans MS");
@@ -72,7 +200,7 @@ function setup() {
 
 function resetGame() {
   // Cat head is 55px across — keep w/h in sync for collisions
-  cat = { x: width / 2, y: height - 120, w: 55, h: 55, vy: -8 };
+  cat = new Cat(width / 2, height -120);
   particles = [];
   raindrops = [];
   difficulty = 0;
@@ -81,22 +209,22 @@ function resetGame() {
 
   platforms = [];
   for (let i = 0; i < 6; i++) {
-    
     let breakingPlatform = random() < 0.2;
+    let moving = random() < 0.4;
+    let dx = random([-1, 1]) * random(0.5, 1.2);
 
-    platforms.push({
-      x: random(0, width - 60),
-      y: i * 100,
-      w: 80,
-      h: 20,
-      dx: random([-1, 1]) * random(0.5, 1.2),
-      moving: random() < 0.4,
-      scored: false,
-      breaking: breakingPlatform,
-      broken: false
-    });
+    platforms.push(
+      new Platform(
+        random(0, width - 80),
+        i * 100, 
+        80,
+        moving,
+        dx,
+        breakingPlatform
+      )
+    );
   }
-  pop();
+
 
   obstacles = [];
   for (let i = 0; i < 2; i++) {
@@ -108,9 +236,6 @@ function resetGame() {
       type: chooseObstacleType(),
     });
   }
-
-  score = 0;
-  gameOver = false;
 }
 
 function draw() {
@@ -139,80 +264,33 @@ function draw() {
   let prevY = cat.y;
 
   // Gravity
-  cat.vy += 0.3;
-  cat.y += cat.vy;
+  cat.updateGravity();
 
-  // Platforms update + cat landing
-  for (let p of platforms) {
-    if (p.moving) {
-      p.x += p.dx;
-      if (p.x < 0 || p.x + p.w > width) p.dx *= -1;
-    }
-
-    if (p.broken) {
-      continue;
-    }
-
-    const catLeft = cat.x - cat.w / 2;
-    const catRight = cat.x + cat.w / 2;
-    const catTop = cat.y - cat.h / 2;
-    const catBottom = cat.y + cat.h / 2;
-    const prevBottom = prevY + cat.h / 2;
-
-    if (
-      catLeft < p.x + p.w &&
-      catRight > p.x &&
-      prevBottom <= p.y &&
-      catBottom >= p.y &&
-      cat.vy > 0
-    ) {
-      // Cat jumps only when falling on top of platforms
-      cat.y = p.y - cat.h / 2;
-
-      // Boosted bounce when the down arrow was pressed on the last jump
-      let jumpStrength = -10;
-      if (boostJump) {
-        jumpStrength = -14;
-        boostJump = false;
-      }
-
-      cat.vy = jumpStrength;
-
-      if (!p.scored) {
-        console.log("score!");
-        score++;
-        p.scored = true;
-      }
-
-      createSparkles(cat.x, cat.y);
-
-      if (p.breaking) {
-        p.broken = true;
-        createRaindrops(p);
-      }
-    }
-  }
+ for (let p of platforms) {
+  p.update();
+  p.tryLand(cat, prevY + cat.h / 2);
+ }
 
   // Camera: keep cat around y=300, move world down
-  if (cat.y < 300) {
-    const dy = 300 - cat.y;
-    cat.y = 300;
+  const dy = cat.applyCamera();
+  if (dy > 0) {
     for (let p of platforms) p.y += dy;
     for (let o of obstacles) o.y += dy;
     for (let pa of particles) pa.y += dy;
     for (let d of raindrops) d.y += dy;
   }
 
-  // Recycle platforms
+// Recycle platforms
+// Find the highest (smallest y) platform
+  let minY = height;
+  for (let p of platforms) {
+    if (p.y < minY) minY = p.y;
+  }
+
+  // Recycle platforms that go off the bottom
   for (let p of platforms) {
     if (p.y > height) {
-      p.x = random(0, width - p.w);
-      p.y = 0;
-      p.dx = random([-1, 1]) * random(0.5, 1.2);
-      p.moving = random() < 0.4;
-      p.scored = false;
-      p.breaking = random() < 0.2;
-      p.broken = false;
+      p.recycle(minY);
     }
   }
 
@@ -252,11 +330,10 @@ function draw() {
   // Increase difficulty as score rises
   updateDifficulty();
 
-  // Draw platforms and cat
   // Draw platforms, obstacles and cat
-  for (let p of platforms) drawCloud(p);
+  for (let p of platforms) p.draw();
   for (let o of obstacles) drawObstacle(o);
-  drawCuteCat(cat.x, cat.y);
+  cat.draw();
 
   // HUD
   fill("#ff1493");
@@ -268,7 +345,7 @@ function draw() {
   if (cat.y - cat.h / 2 > height) gameOver = true;
 
   // Keep cat within canvas
-  cat.x = constrain(cat.x, cat.w / 2, width - cat.w / 2);
+  cat.keepInsideCanvas();
 
   updateRaindrops();
   updateSparkles();
@@ -542,32 +619,35 @@ function drawCloud(p) {
 }
 
 function updateDifficulty() {
-  // Make platforms move faster as score increases
+  // difficulty already goes from 0 → 1 as score increases
+  const d = difficulty;
+
   for (let p of platforms) {
     if (p.moving) {
-      p.dx *= 1 + score * 0.00005; // gradual speed increase
+      const dir = p.dx >= 0 ? 1 : -1;
+      const baseSpeed = 0.5;
+      const extraSpeed = d * 1.0;
+      p.dx = dir * (baseSpeed + extraSpeed);
     }
-    // Shrink platforms after score > 30
-    if (score > 20) {
-      p.w = max(40, 80 - score * 0.2);
-    }
+
+    p.w = 80 - d * 20;
   }
 
-  // Make obstacles move faster
   for (let o of obstacles) {
-    o.dx *= 1 + score * 0.00005;
+    const dir = o.dx >= 0 ? 1 : -1;
+    const baseSpeed = 0.6;
+    const extraSpeed = d * 1.8; 
+    o.dx = dir * (baseSpeed + extraSpeed);
   }
 
-  // Increase gravity slightly over time
-  cat.vy += score * 0.0005;
+  const targetObstacles = min(2 + floor(score / 20), 5);
 
-  // Add extra obstacles every 20 points
-  if (score > 0 && score % 20 === 0 && obstacles.length < 5) {
+  while (obstacles.length < targetObstacles) {
     obstacles.push({
       x: random(40, width - 40),
       y: random(-200, 0),
       size: 30,
-      dx: random([-1, 1]) * 1.2,
+      dx: random([-1, 1]) * (0.6 + d * 1.8),
       type: chooseObstacleType(),
     });
   }

@@ -55,6 +55,7 @@ function chooseObstacleType() {
       "star",
       "rainbow",
       "rainbow",
+      "rainbow",
     ];
     return random(types);
   }
@@ -81,7 +82,6 @@ function resetGame() {
 
   platforms = [];
   for (let i = 0; i < 6; i++) {
-    
     let breakingPlatform = random() < 0.2;
 
     platforms.push({
@@ -93,7 +93,7 @@ function resetGame() {
       moving: random() < 0.4,
       scored: false,
       breaking: breakingPlatform,
-      broken: false
+      broken: false,
     });
   }
   pop();
@@ -114,15 +114,26 @@ function resetGame() {
 }
 
 function draw() {
-  // When the score reaches 100 the difficulty is the highest (1)
-  // It can never be more difficult than that 1.
-  difficulty = map(score, 0, 100, 0, 1, true);
+  difficulty = map(score, 0, 50, 0, 1, true);
 
-  // Background gets darker when increasing difficulty
-  let r = lerp(255, 115, difficulty);
-  let g = lerp(209, 0, difficulty);
-  let b = lerp(220, 75, difficulty);
-  background(r, g, b);
+  // Define pastel sunset stops
+  let c1 = color("#ffd1dc "); // pastel pink
+  let c2 = color(255, 183, 197); // pink
+  let c3 = color(255, 223, 186); // peach/apricot
+  let c4 = color(200, 170, 255); // lavender
+  let c5 = color(180, 220, 255); // baby blue
+
+  // Blend across multiple stops
+  let col;
+  if (difficulty < 0.33) {
+    col = lerpColor(c1, c2, difficulty / 0.33); // pink → peach
+  } else if (difficulty < 0.66) {
+    col = lerpColor(c2, c3, (difficulty - 0.33) / 0.33); // peach → lavender
+  } else {
+    col = lerpColor(c3, c4, (difficulty - 0.66) / 0.34); // lavender → blue
+  }
+
+  background(col);
 
   if (!gameStarted) {
     drawStartScreen();
@@ -378,10 +389,10 @@ function updateSparkles() {
 function createRaindrops(p) {
   for (let i = 0; i < 15; i++) {
     raindrops.push({
-      x: p.x + random(10, p.w -10),
+      x: p.x + random(10, p.w - 10),
       y: p.y + 15,
-      vy: random(4,7),
-      len: random(8, 14)
+      vy: random(4, 7),
+      len: random(8, 14),
     });
   }
 }
@@ -420,15 +431,16 @@ function drawCuteCat(x, y) {
   fill(0);
   ellipse(x - 14, y - 5, 7, 7);
   ellipse(x + 14, y - 5, 7, 7);
+  noStroke();
   fill(255);
   ellipse(x - 12, y - 7, 3, 3);
   ellipse(x + 16, y - 7, 3, 3);
 
   // Nose + mouth
-  fill("#ff69b4");
-  triangle(x - 3, y + 5, x + 3, y + 5, x, y + 10);
   stroke(0);
   strokeWeight(1.5);
+  fill("#ff69b4");
+  triangle(x - 3, y + 5, x + 3, y + 5, x, y + 10);
   noFill();
   arc(x - 3, y + 12, 6, 6, 0, PI);
   arc(x + 3, y + 12, 6, 6, 0, PI);
@@ -524,16 +536,17 @@ function star(x, y, r1, r2, n) {
 
 // Cloud platforms
 function drawCloud(p) {
-
   if (p.broken) return;
-  if (p.breaking) { //rainy clouds
-    fill(2);
-    stroke(130);
-  } else { //normal clouds
+  if (p.breaking) {
+    //rainy clouds
+    fill(180, 200, 220);
+    stroke(140, 160, 180);
+  } else {
+    //normal clouds
     fill(255);
-  stroke(200);
+    stroke(200);
   }
-  
+
   strokeWeight(1);
   ellipse(p.x + 20, p.y + 10, 40, 30);
   ellipse(p.x + p.w / 2, p.y + 10, 50, 35);
@@ -560,15 +573,4 @@ function updateDifficulty() {
 
   // Increase gravity slightly over time
   cat.vy += score * 0.0005;
-
-  // Add extra obstacles every 20 points
-  if (score > 0 && score % 20 === 0 && obstacles.length < 5) {
-    obstacles.push({
-      x: random(40, width - 40),
-      y: random(-200, 0),
-      size: 30,
-      dx: random([-1, 1]) * 1.2,
-      type: chooseObstacleType(),
-    });
-  }
 }

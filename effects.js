@@ -18,11 +18,7 @@ export default class Effects {
         vy: random(-2, -0.5),
         life: 60,
         size: random(3, 6),
-        color: color(
-          random(200, 255),
-          random(150, 255),
-          random(200, 255)
-        ),
+        color: color(random(200, 255), random(150, 255), random(200, 255)),
       });
     }
   }
@@ -78,3 +74,5 @@ export default class Effects {
     for (let d of this.raindrops) d.y += dy;
   }
 }
+
+export { Effects };

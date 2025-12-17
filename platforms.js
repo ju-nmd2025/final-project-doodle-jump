@@ -82,3 +82,5 @@ export default class Platform {
     noStroke();
   }
 }
+
+export { Platform };

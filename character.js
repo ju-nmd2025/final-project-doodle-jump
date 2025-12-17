@@ -75,4 +75,3 @@ export default class Cat {
     noStroke();
   }
 }
-export { Cat };

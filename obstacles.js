@@ -148,4 +148,3 @@ function star(x, y, r1, r2, n) {
   }
   endShape(CLOSE);
 }
-export { Obstacle, star };

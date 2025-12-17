@@ -74,5 +74,3 @@ export default class Effects {
     for (let d of this.raindrops) d.y += dy;
   }
 }
-
-export { Effects };

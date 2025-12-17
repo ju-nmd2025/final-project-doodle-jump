@@ -26,9 +26,6 @@ function setup() {
 }
 
 function resetGame() {
-  frameRate(60); //the game is designed to run at 60 FPR but on browser it runs on ~120 so it looks and plays differently,
-                 //this is a small fix to tell the game to always try to run on 60 FPS
-
   // Cat head is 55px across — keep w/h in sync for collisions
   cat = new Cat(width / 2, height -120);
   effects.reset();

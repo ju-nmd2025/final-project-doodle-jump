@@ -27,7 +27,7 @@ function setup() {
 
 function resetGame() {
   // Cat head is 55px across — keep w/h in sync for collisions
-  cat = new Cat(width / 2, height -120);
+  cat = new Cat(width / 2, height - 120);
   effects.reset();
   difficulty = 0;
   score = 0;
@@ -42,7 +42,7 @@ function resetGame() {
     platforms.push(
       new Platform(
         random(0, width - 80),
-        i * 100, 
+        i * 100,
         80,
         moving,
         dx,
@@ -51,14 +51,15 @@ function resetGame() {
     );
   }
 
-
   obstacles = [];
   for (let i = 0; i < 2; i++) {
-    obstacles.push(new Obstacle(
-      random(40, width - 40),
-      random(140, height -240),
-      chooseObstacleType(obstacles)
-    ));
+    obstacles.push(
+      new Obstacle(
+        random(40, width - 40),
+        random(140, height - 240),
+        chooseObstacleType(obstacles)
+      )
+    );
   }
 }
 
@@ -99,25 +100,25 @@ function draw() {
   let prevY = cat.y;
 
   // Gravity
-  if(gameStarted){
+  if (gameStarted) {
     cat.updateGravity();
   }
 
   for (let p of platforms) {
-  p.update();
+    p.update();
 
-  const result = p.tryLand(cat, prevY + cat.h / 2);
+    const result = p.tryLand(cat, prevY + cat.h / 2);
 
-  if (result.landed) {
-    if (result.scored) score++;
+    if (result.landed) {
+      if (result.scored) score++;
 
-    effects.createSparkles(cat.x, cat.y);
+      effects.createSparkles(cat.x, cat.y);
 
-    if (result.broke) {
-      effects.createRaindrops(p);
+      if (result.broke) {
+        effects.createRaindrops(p);
+      }
     }
   }
-}
 
   // Camera: keep cat around y=300, move world down
   const dy = cat.applyCamera();
@@ -125,7 +126,6 @@ function draw() {
     for (let p of platforms) p.y += dy;
     for (let o of obstacles) o.y += dy;
     effects.applyCameraShift(dy);
-
   }
 
   let minY = height;
@@ -140,22 +140,22 @@ function draw() {
   }
 
   for (let o of obstacles) {
-  o.update();
+    o.update();
 
-  const result = o.checkCollision(cat);
-  if (result === "rainbow") {
-    score += 5;
-    cat.vy = -15;
-    effects.createSparkles(cat.x, cat.y);
-    o.y = height + 50; // recycle immediately (same as before)
-  } else if (result === "hit") {
-    gameOver = true;
+    const result = o.checkCollision(cat);
+    if (result === "rainbow") {
+      score += 5;
+      cat.vy = -15;
+      effects.createSparkles(cat.x, cat.y);
+      o.y = height + 50; // recycle immediately (same as before)
+    } else if (result === "hit") {
+      gameOver = true;
+    }
+
+    o.draw();
+
+    if (o.y > height + 40) o.recycle(obstacles);
   }
-
-  o.draw();
-
-  if (o.y > height + 40) o.recycle(obstacles);
-}
 
   // Increase difficulty as score rises
   updateDifficulty();
@@ -264,24 +264,25 @@ function updateDifficulty() {
   for (let o of obstacles) {
     const dir = o.dx >= 0 ? 1 : -1;
     const baseSpeed = 0.6;
-    const extraSpeed = d * 1.8; 
+    const extraSpeed = d * 1.8;
     o.dx = dir * (baseSpeed + extraSpeed);
   }
 
   const targetObstacles = min(2 + floor(score / 20), 5);
 
   while (obstacles.length < targetObstacles) {
-    obstacles.push(new Obstacle(
-    random(40, width - 40),
-    random(-200, 0),
-    chooseObstacleType(obstacles)
-  ));
- }
+    obstacles.push(
+      new Obstacle(
+        random(40, width - 40),
+        random(-200, 0),
+        chooseObstacleType(obstacles)
+      )
+    );
+  }
 }
 
 window.setup = setup;
 window.draw = draw;
 window.mouseClicked = mouseClicked;
 window.keyPressed = keyPressed;
-
-refercences ChatGTP, GitHub, P5.js
+// References: ChatGPT, GitHub, p5.js
